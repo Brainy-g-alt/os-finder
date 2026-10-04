@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The OS Finder: Duplicate File Finder & Cleaner</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f5;--panel:#fff;--ink:#12303a;--mute:#5d7580;--line:#d3dfe4;--accent:#0b7a75;--accent-ink:#fff;--keep:#e8f6f1;--del:#fdecea;--danger:#b3261e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1b20;--panel:#15272e;--ink:#e3eef1;--mute:#8fa8b1;--line:#27404a;--accent:#38c4b8;--accent-ink:#06201e;--keep:#12342f;--del:#3a1f1d;--danger:#ff8a80}}
+:root[data-theme="dark"]{--bg:#0e1b20;--panel:#15272e;--ink:#e3eef1;--mute:#8fa8b1;--line:#27404a;--accent:#38c4b8;--accent-ink:#06201e;--keep:#12342f;--del:#3a1f1d;--danger:#ff8a80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Instrument Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;margin:0;line-height:1.1}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 120px}
+.brand{font:800 20px "Bricolage Grotesque",sans-serif;display:flex;align-items:center;gap:10px}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--accent);position:relative}
+.logo:before,.logo:after{content:"";position:absolute;width:12px;height:14px;border:2px solid var(--accent-ink);border-radius:3px}
+.logo:before{left:4px;top:4px}.logo:after{left:11px;top:10px;background:var(--accent)}
+.hero{padding:56px 0 28px}
+.hero h1{font-size:clamp(34px,7vw,56px);font-weight:800;letter-spacing:-.02em;max-width:14em}
+.hero p{color:var(--mute);font-size:18px;max-width:34em;margin:16px 0 28px}
+.btn{border:0;border-radius:12px;padding:14px 22px;font-weight:600;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.drop{border:2px dashed var(--line);border-radius:20px;padding:28px;margin-top:28px;color:var(--mute);background:var(--panel)}
+.drop.over{border-color:var(--accent);background:var(--keep)}
+.trust{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:32px}
+.trust div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+.trust b{display:block;margin-bottom:4px}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:18px 0 8px}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.sum{display:flex;gap:28px;flex-wrap:wrap;margin:24px 0}
+.sum div{font-size:14px;color:var(--mute)}
+.sum strong{display:block;font:800 34px "Bricolage Grotesque",sans-serif;color:var(--ink)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 14px;border-radius:99px;font-size:14px}
+.tab[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;font-size:14px;color:var(--mute)}
+select{font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+.group{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-bottom:14px;overflow:hidden}
+.ghead{padding:12px 16px;display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);font-size:14px;color:var(--mute)}
+.ghead b{color:var(--ink);font-family:"Bricolage Grotesque",sans-serif;font-size:16px;word-break:break-all}
+.file{display:flex;gap:12px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);background:var(--keep)}
+.file:first-of-type{border-top:0}
+.file.sel{background:var(--del)}
+.file input{width:20px;height:20px;accent-color:var(--danger);flex:none}
+.thumb{width:44px;height:44px;border-radius:8px;background:var(--line);object-fit:cover;flex:none}
+.meta{min-width:0;flex:1}
+.path{font-size:14px;word-break:break-all}
+.sub{font-size:12px;color:var(--mute)}
+.tag{font-size:12px;font-weight:600;color:var(--accent);flex:none}
+.file.sel .tag{color:var(--danger)}
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.dock .in{max-width:860px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+dialog{border:0;border-radius:18px;padding:24px;max-width:440px;background:var(--panel);color:var(--ink)}
+dialog::backdrop{background:rgba(5,15,20,.6)}
+.hide{display:none!important}
+.empty{text-align:center;padding:60px 0;color:var(--mute)}
+.note{font-size:13px;color:var(--mute);margin-top:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="logo"></span>The OS Finder</div>
+
+  <section id="home" class="hero">
+    <h1>Find duplicate files. Free up space.</h1>
+    <p>Pick a folder and we'll show you every file that exists more than once, so you can keep one copy and clear the rest.</p>
+    <div class="row">
+      <button class="btn" id="pick">Choose a folder to scan</button>
+      <button class="btn ghost" id="demo">Try with sample files</button>
+    </div>
+    <div class="drop" id="drop">Or drag a folder here. Files are compared by their contents, not their names.</div>
+    <div class="trust">
+      <div><b>Private</b>Everything runs in your browser. Nothing is uploaded.</div>
+      <div><b>Safe by default</b>We always keep at least one copy of every file.</div>
+      <div><b>You decide</b>Nothing is removed until you review and confirm.</div>
+    </div>
+    <input type="file" id="fallback" webkitdirectory multiple class="hide">
+  </section>
+
+  <section id="scan" class="hide hero">
+    <h2 id="scanTitle">Scanning…</h2>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="sub" id="scanSub"></div>
+  </section>
+
+  <section id="results" class="hide">
+    <div class="row" style="justify-content:space-between;margin-top:24px">
+      <h2>Scan results</h2>
+      <button class="btn ghost" id="again">Scan another folder</button>
+    </div>
+    <div class="sum">
+      <div><strong id="nGroups">0</strong>sets of duplicates</div>
+      <div><strong id="nFiles">0</strong>extra copies</div>
+      <div><strong id="nSize">0 MB</strong>you can free up</div>
+    </div>
+    <div class="tabs" id="tabs" role="group" aria-label="File type"></div>
+    <div class="tools">
+      <label for="rule">Keep:</label>
+      <select id="rule">
+        <option value="oldest">Oldest copy</option>
+        <option value="newest">Newest copy</option>
+        <option value="short">Shortest path</option>
+      </select>
+      <button class="tab" id="auto">Select the rest</button>
+      <button class="tab" id="clear">Clear selection</button>
+    </div>
+    <div id="list"></div>
+    <div class="empty hide" id="none"><h3>No duplicates found</h3><p>Every file in this folder is unique.</p></div>
+  </section>
+</div>
+
+<div class="dock hide" id="dock"><div class="in">
+  <div><b id="selCount">0 files</b> selected<div class="sub" id="selSize"></div></div>
+  <button class="btn danger" id="del" disabled>Review and delete</button>
+</div></div>
+
+<dialog id="dlg">
+  <h3 id="dTitle">Delete selected files?</h3>
+  <p id="dBody" style="color:var(--mute)"></p>
+  <div class="row" style="justify-content:flex-end">
+    <button class="btn ghost" id="dNo">Cancel</button>
+    <button class="btn danger" id="dYes">Delete files</button>
+  </div>
+</dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const TYPES={Photos:'jpg jpeg png gif webp heic bmp tiff svg raw',Videos:'mp4 mov avi mkv wmv webm m4v',Music:'mp3 wav flac aac m4a ogg',Documents:'pdf doc docx xls xlsx ppt pptx txt rtf csv md pages numbers'};
+const typeOf=n=>{const e=(n.split('.').pop()||'').toLowerCase();for(const k in TYPES)if(TYPES[k].split(' ').includes(e))return k;return 'Other'};
+const fmt=b=>b>=1e9?(b/1e9).toFixed(2)+' GB':b>=1e6?(b/1e6).toFixed(1)+' MB':b>=1e3?Math.round(b/1e3)+' KB':b+' B';
+const fdate=t=>new Date(t).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+let files=[],groups=[],sel=new Set(),filter='All',canDelete=false,isDemo=false,uid=0;
+
+function show(s){['home','scan','results'].forEach(x=>$(x).classList.toggle('hide',x!==s));$('dock').classList.toggle('hide',s!=='results')}
+
+// ---------- Collecting files ----------
+async function walk(dir,base,out,onTick){
+  for await(const [name,h] of dir.entries()){
+    if(name.startsWith('.'))continue;
+    if(h.kind==='file'){const f=await h.getFile();out.push({id:uid++,name,path:base+name,size:f.size,mod:f.lastModified,file:f,dir});onTick(out.length)}
+    else await walk(h,base+name+'/',out,onTick);
+  }
+}
+async function pickFolder(){
+  if(window.showDirectoryPicker){
+    try{
+      const root=await window.showDirectoryPicker({mode:'readwrite'});
+      canDelete=true;isDemo=false;show('scan');$('scanTitle').textContent='Looking through '+root.name+'…';
+      const out=[];await walk(root,root.name+'/',out,n=>{$('scanSub').textContent=n+' files found'});
+      return analyze(out);
+    }catch(e){if(e.name!=='AbortError')alert('Could not open that folder. Try the drag-and-drop option instead.');return}
+  }
+  $('fallback').click();
+}
+$('fallback').onchange=e=>fromList([...e.target.files]);
+function fromList(list){
+  canDelete=false;isDemo=false;show('scan');
+  const out=list.filter(f=>!f.name.startsWith('.')).map(f=>({id:uid++,name:f.name,path:f.webkitRelativePath||f.name,size:f.size,mod:f.lastModified,file:f}));
+  analyze(out);
+}
+$('pick').onclick=pickFolder;
+const drop=$('drop');
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',async e=>{
+  const items=[...e.dataTransfer.items];
+  const h=items[0]&&items[0].getAsFileSystemHandle?await items[0].getAsFileSystemHandle():null;
+  if(h&&h.kind==='directory'){canDelete=true;isDemo=false;show('scan');const out=[];await walk(h,h.name+'/',out,n=>{$('scanSub').textContent=n+' files found'});analyze(out)}
+  else alert('Please use "Choose a folder to scan" for this browser.');
+});
+
+// ---------- Finding duplicates ----------
+async function hashOf(f){
+  const SAMPLE=64*1048576;
+  let buf;
+  if(f.size>SAMPLE){const parts=[f.slice(0,1048576),f.slice(Math.floor(f.size/2),Math.floor(f.size/2)+1048576),f.slice(f.size-1048576)];buf=await new Blob(parts).arrayBuffer()}
+  else buf=await f.arrayBuffer();
+  const d=new Uint8Array(await crypto.subtle.digest('SHA-256',buf));
+  return [...d].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function analyze(all){
+  files=all;sel.clear();groups=[];
+  $('scanTitle').textContent='Comparing files…';
+  const bySize={};all.filter(f=>f.size>0).forEach(f=>(bySize[f.size]??=[]).push(f));
+  const cands=Object.values(bySize).filter(a=>a.length>1);
+  const total=cands.reduce((s,a)=>s+a.length,0);let done=0;
+  for(const set of cands){
+    const byHash={};
+    for(const f of set){
+      if(isDemo)f.hash=f.fake;else{try{f.hash=await hashOf(f.file)}catch(e){continue}}
+      (byHash[f.hash]??=[]).push(f);done++;
+      if(done%5===0||done===total){$('prog').style.width=(done/total*100)+'%';$('scanSub').textContent=done+' of '+total+' possible matches checked';await new Promise(r=>setTimeout(r))}
+    }
+    Object.values(byHash).filter(a=>a.length>1).forEach(a=>groups.push({id:groups.length,items:a,size:a[0].size,type:typeOf(a[0].name)}));
+  }
+  groups.sort((a,b)=>b.size*b.items.length-a.size*a.items.length);
+  autoSelect();render();show('results');
+}
+
+// ---------- Selection ----------
+function keeper(g){
+  const r=$('rule').value,a=[...g.items];
+  if(r==='newest')a.sort((x,y)=>y.mod-x.mod);
+  else if(r==='short')a.sort((x,y)=>x.path.length-y.path.length);
+  else a.sort((x,y)=>x.mod-y.mod);
+  return a[0];
+}
+function autoSelect(){sel.clear();groups.forEach(g=>{const k=keeper(g);g.items.forEach(f=>{if(f!==k)sel.add(f.id)})})}
+$('auto').onclick=()=>{autoSelect();render()};
+$('rule').onchange=()=>{autoSelect();render()};
+$('clear').onclick=()=>{sel.clear();render()};
+function toggle(g,f,on){
+  if(on){const left=g.items.filter(x=>!sel.has(x.id)&&x!==f).length;if(left<1){alert('Keep at least one copy of each file. Unselect another copy first.');return render()}sel.add(f.id)}
+  else sel.delete(f.id);
+  render();
+}
+
+// ---------- Rendering ----------
+function render(){
+  const shown=groups.filter(g=>filter==='All'||g.type===filter);
+  $('nGroups').textContent=groups.length;
+  $('nFiles').textContent=groups.reduce((s,g)=>s+g.items.length-1,0);
+  $('nSize').textContent=fmt(groups.reduce((s,g)=>s+g.size*(g.items.length-1),0));
+  const types=['All',...new Set(groups.map(g=>g.type))];
+  $('tabs').innerHTML='';
+  types.forEach(t=>{const b=document.createElement('button');b.className='tab';b.textContent=t;b.setAttribute('aria-pressed',t===filter);b.onclick=()=>{filter=t;render()};$('tabs').append(b)});
+  $('none').classList.toggle('hide',groups.length>0);
+  const list=$('list');list.innerHTML='';
+  shown.forEach(g=>{
+    const box=document.createElement('div');box.className='group';
+    box.innerHTML=`<div class="ghead"><b></b><span>${g.items.length} copies · ${fmt(g.size)} each</span></div>`;
+    box.querySelector('b').textContent=g.items[0].name;
+    g.items.forEach(f=>{
+      const on=sel.has(f.id);
+      const row=document.createElement('label');row.className='file'+(on?' sel':'');
+      const cb=document.createElement('input');cb.type='checkbox';cb.checked=on;cb.setAttribute('aria-label','Delete '+f.path);
+      cb.onchange=()=>toggle(g,f,cb.checked);
+      row.append(cb);
+      if(g.type==='Photos'&&!isDemo&&f.file&&/^image\//.test(f.file.type)){const im=document.createElement('img');im.className='thumb';im.loading='lazy';im.alt='';im.src=URL.createObjectURL(f.file);row.append(im)}
+      const m=document.createElement('div');m.className='meta';
+      const p=document.createElement('div');p.className='path';p.textContent=f.path;
+      const s=document.createElement('div');s.className='sub';s.textContent='Modified '+fdate(f.mod);
+      m.append(p,s);row.append(m);
+      const t=document.createElement('span');t.className='tag';t.textContent=on?'Delete':'Keep';row.append(t);
+      box.append(row);
+    });
+    list.append(box);
+  });
+  const chosen=files.filter(f=>sel.has(f.id));
+  $('selCount').textContent=chosen.length+(chosen.length===1?' file':' files');
+  $('selSize').textContent=fmt(chosen.reduce((s,f)=>s+f.size,0))+' will be freed';
+  $('del').disabled=!chosen.length;
+}
+
+// ---------- Deleting ----------
+$('del').onclick=()=>{
+  const chosen=files.filter(f=>sel.has(f.id));
+  const size=fmt(chosen.reduce((s,f)=>s+f.size,0));
+  if(canDelete){$('dTitle').textContent='Delete '+chosen.length+' files?';$('dBody').textContent='This permanently deletes the selected copies ('+size+') and skips the Trash or Recycle Bin. One copy of every file stays.';$('dYes').textContent='Delete files'}
+  else if(isDemo){$('dTitle').textContent='Delete '+chosen.length+' sample files?';$('dBody').textContent='These are sample files, so nothing on your computer will change.';$('dYes').textContent='Delete files'}
+  else{$('dTitle').textContent='Save your delete list';$('dBody').textContent='This browser can\u2019t delete files directly. We\u2019ll save a list of the '+chosen.length+' selected files ('+size+') so you can remove them yourself. For direct deletion, use Chrome or Edge on a computer.';$('dYes').textContent='Save list'}
+  $('dlg').showModal();
+};
+$('dNo').onclick=()=>$('dlg').close();
+$('dYes').onclick=async()=>{
+  $('dlg').close();
+  const chosen=files.filter(f=>sel.has(f.id));
+  if(!canDelete&&!isDemo){
+    const blob=new Blob([chosen.map(f=>f.path).join('\n')],{type:'text/plain'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='files-to-delete.txt';a.click();return;
+  }
+  let ok=0,fail=0;
+  for(const f of chosen){
+    try{if(canDelete)await f.dir.removeEntry(f.name);ok++;f.gone=true}catch(e){fail++}
+  }
+  files=files.filter(f=>!f.gone);
+  groups.forEach(g=>g.items=g.items.filter(f=>!f.gone));
+  groups=groups.filter(g=>g.items.length>1);
+  sel.clear();render();
+  alert(ok+' files deleted'+(fail?'. '+fail+' could not be deleted.':'.'));
+};
+
+// ---------- Demo ----------
+$('demo').onclick=()=>{
+  isDemo=true;canDelete=false;show('scan');
+  const d=Date.now(),day=864e5;
+  const mk=(path,size,fake,age)=>({id:uid++,name:path.split('/').pop(),path,size,fake,mod:d-age*day});
+  const demo=[
+    mk('Pictures/Holiday/IMG_2041.jpg',3400000,'a',400),mk('Downloads/IMG_2041 (1).jpg',3400000,'a',90),mk('Desktop/IMG_2041 copy.jpg',3400000,'a',12),
+    mk('Documents/Tax/return-2023.pdf',820000,'b',300),mk('Downloads/return-2023.pdf',820000,'b',20),
+    mk('Music/Road Trip/track01.mp3',5100000,'c',700),mk('Music/Old Backup/track01.mp3',5100000,'c',680),
+    mk('Videos/birthday.mp4',412000000,'d',200),mk('Downloads/birthday-final.mp4',412000000,'d',150),
+    mk('Documents/resume.docx',64000,'e',60),mk('Desktop/resume - Copy.docx',64000,'e',5),
+    mk('Documents/notes.txt',2100,'f1',30),mk('Documents/other.txt',2100,'f2',31)
+  ];
+  analyze(demo);
+};
+$('again').onclick=()=>{filter='All';show('home')};
+</script>
+</body>
+</html>
